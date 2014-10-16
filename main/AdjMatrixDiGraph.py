@@ -25,7 +25,7 @@ class AdjMatrixDiGraph(object):
             raise RuntimeError("Number of vertices must be nonnegative")
         self._V = V
         self._E = 0
-        for i in range (0, V):
+        for _ in range (0, V):
             self._adj_m.append([False] * V)
         
     def gen_random(self, E):
