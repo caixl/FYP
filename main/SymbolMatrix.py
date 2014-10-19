@@ -24,9 +24,7 @@ class SymbolMatrix():
         for i in range(0, N):
             self._encMatix[i] = [None]*N
             
-        for symbol in symbols:
-            if symbol not in self._st:
-                self._st[symbol] = len(self._st)
+        self._st = symbols
             
         for label in self._st.keys():
             self._keys[self._st[label]] = label
