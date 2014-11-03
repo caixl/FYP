@@ -3,24 +3,22 @@ Created on 15 Oct, 2014
 
 @author: Caixl
 '''
-from charm.schemes.abenc.abenc_bsw07 import CPabe_BSW07
+from charm.schemes.abenc.abenc_lsw08 import KPabe
 from charm.toolbox.pairinggroup import PairingGroup
-from charm.adapters.abenc_adapt_hybrid import HybridABEnc as HybridABEnc
+from charm.adapters.kpabenc_adapt_hybrid import HybridABEnc as HybridKPABEnc
 
 
 from SymbolDiGraph import SymbolDiGraph
 from SymbolMatrix import SymbolMatrix
-from TotalSize import total_size 
 
-
-class CPABESymbolDiGraph:
+class KPABESymbolDiGraph:
     
     # the symbol graph
     _symbol_graph = None
     # operating group
     _group = None
-    # Cipertext-Policy Attribute-Based Encryption object
-    _cpabe = None
+    # Key-Policy Attribute-Based Encryption object
+    _kpabe = None
     # hybrid
     _hyb_abe = None
     
@@ -40,18 +38,9 @@ class CPABESymbolDiGraph:
         '''
         # initialize CPABE object
         self._group = PairingGroup('SS512')
-        self._cpabe = CPabe_BSW07(self._group)
-        self._hyb_abe = HybridABEnc(self._cpabe, self._group)
-        #access_policy = '(ar and bc)'
-        #message = "hello world this is an important message."
-        #(pk, mk) = self._hyb_abe.setup()
-        #sk = self._hyb_abe.keygen(pk, mk, ['AR', 'BC'])
-        #ct = self._hyb_abe.encrypt(pk, message, access_policy)
-        #try:
-        #    result = self._hyb_abe.decrypt(pk, sk, ct)
-        #    print result
-        #except Exception:
-        #    pass
+        self._kpabe = KPabe(self._group)
+        self._hyb_abe = HybridKPABEnc(self._kpabe, self._group)
+        
         
         # attributes should be vertices
         # since its diDraph, the query of two vertices sequence matters
@@ -82,48 +71,46 @@ class CPABESymbolDiGraph:
         for i in range(0, size):
             for j in range(0, size):
                 msg = str(self._symbol_graph.get_edge_index(i,j))
-                cell_access_policy = '(%s AND %s)'%((self._symbol_graph.name(i)+'r'),
-                                                    (self._symbol_graph.name(j)+'c'))
+                #cell_access_policy = '(%s AND %s)'%(self._symbol_graph.name(i)+'r',
+                #                                    self._symbol_graph.name(j)+'c')
                 cipher = self._hyb_abe.encrypt(self._master_public_key, 
                                                msg, 
-                                               cell_access_policy)
+                                               [(self._symbol_graph.name(i)+'r').upper(), 
+                                                (self._symbol_graph.name(j)+'c').upper()])
                 self._enc_symbol_matix.set_matrix(cipher, i, j)
 
         return True
     
     @classmethod
-    def decrypt(self, master_public_key, sk, cipher_matrix, queries):
+    def decrypt(self, sk, cipher_matrix, queries):
         '''
         Decryption requires master_public_key, user secret key, and cipher
         '''
         group = PairingGroup('SS512')
-        cpabe = CPabe_BSW07(group)
-        hyb_abe = HybridABEnc(cpabe, group)
+        kpabe = KPabe(group)
+        hyb_abe = HybridKPABEnc(kpabe, group)
         
-        msg = ''
+        #convert to lower case
+        msg = ""
         for query in queries:
-            #convert to lower case
             s1 = query[0].lower()
             s2 = query[1].lower()
-            
             cipher = cipher_matrix.get_cell_by_symbol(s1, s2)
-            msg += hyb_abe.decrypt(master_public_key, sk, cipher) + " "
+            msg +=  hyb_abe.decrypt(cipher, sk) + " "
         
         return msg
     
-    def gen_secret_key(self, attributes):
+    def gen_secret_key(self, policy):
         '''
-        Generate individual's secret key using the given attributes
+        Generate individual's secret key using the given policy
         '''
         assert (self._master_public_key and self._master_key), "Please do setup first."
         
         # convert strings in attributes to uppercase
-        for elem in attributes:
-            elem = elem.upper()
-        
+     
         return self._hyb_abe.keygen(self._master_public_key, 
                                   self._master_key,
-                                  attributes)
+                                  policy)
         
     def print_result(self):
         print self._enc_symbol_matix
@@ -142,67 +129,46 @@ if __name__ == '__main__':
     print sg
     
     #encrypt graph
-    abe_graph = CPABESymbolDiGraph(sg)
+    abe_graph = KPABESymbolDiGraph(sg)
     abe_graph.setup()
     
     abe_graph.encrypt()
     #abe_graph.print_result()
     
+    #sk_bob_00 = abe_graph.gen_secret_key(['AR','AC','CC'])
     #bob needs to query graph
     #grant bob access to (a,a)
-    sk_bob_aa = abe_graph.gen_secret_key(['AR','AC','BR'])
+    sk_bob_aa = abe_graph.gen_secret_key('(AR AND AC) OR (BR AND BC)')
     #grant bob access to (b,b)
-    sk_bob_bb = abe_graph.gen_secret_key(['BR','BC'])
+    #sk_bob_bb = abe_graph.gen_secret_key('BR AND BC')
     
-    sk_bob_cc = abe_graph.gen_secret_key(['CR'])
+    #sk_bob_cc = abe_graph.gen_secret_key(['CR'])
     
+    #print sk_bob_00
     
     #print total_size(abe_graph.gen_secret_key(abe_graph._attributes))
+    #print total_size(sk_bob_00)
     #print total_size(sk_bob_aa)
     #print total_size(sk_bob_bb)
     #print total_size(sk_bob_cc)
     
     '''User/Untrusted Server side'''
     
-    query = [['a','a'], ['b','a']]
+    query = [['a','a'], ['b','b']]
     
-    result1 = CPABESymbolDiGraph.decrypt(abe_graph._master_public_key, 
-                                        sk_bob_aa, 
+    result1 = KPABESymbolDiGraph.decrypt(sk_bob_aa, 
                                         abe_graph._enc_symbol_matix, 
                                         query)
-    print '%s : %s'%(query,result1)
+    
+    print '%s: %s'%(query , result1)
     
     
-    'Decryption using wrong key crashes Python'
-    
-    query = [['a','a'], ['a','b']]
-    
-    result2 = CPABESymbolDiGraph.decrypt(abe_graph._master_public_key, 
-                                        sk_bob_aa, 
+    ''' decryption with wrong key still crashes python'''
+    query = [['a','b'], ['b','a']]
+    result2 = KPABESymbolDiGraph.decrypt(sk_bob_aa, 
                                         abe_graph._enc_symbol_matix, 
                                         query)
-    print '%s : %s'%(query,result2)
     
-    
-    
-    #sk_bob_aa.extend(query_bb)
-    '''
-    print sk_bob_aa
-    print sk_bob_bb
-    sk_bob_ab = sk_bob_aa
-    sk_bob_ab['Djp']['BR'] = sk_bob_bb['Djp']['BR']
-    sk_bob_ab['Djp']['BC'] = sk_bob_bb['Djp']['BC']
-    sk_bob_ab['S'].extend(sk_bob_bb['S'])
-    sk_bob_ab['Dj']['BR'] = sk_bob_bb['Dj']['BR']
-    sk_bob_ab['Dj']['BC'] = sk_bob_bb['Dj']['BC']
-    '''
-    #print sk_bob_ab
-    
-    #result3 = CPABESymbolDiGraph.decrypt(abe_graph._master_public_key, 
-    #                                    sk_bob_aa, 
-    #                                    abe_graph._enc_symbol_matix, 
-    #                                    query_ab)
-    #print '(%s,%s): %s'%(query_ab[0],query_ab[1],result3)
-    
+    print '%s: %s'%(query , result2)
     
     
