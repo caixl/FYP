@@ -1,28 +1,27 @@
 '''
 Created on 9 Oct, 2014
+Modified on 2 Feb 2015
 
 @author: Xinlei Cai
 '''
 
 from AdjMatrixDiGraph import AdjMatrixDiGraph
+from AdjListDiGraph import AdjListDiGraph
 
 class SymbolDiGraph(object):
     
     #string to index
     _st = {}
-    #index to string
+    #index to string 
     _keys = {}
     #DiGraph
     _G = None
     
-    def __init__(self, symbols, G=None):
+    def __init__(self, symbols, G):
         '''
         Randomly generate a graph if digraph G is not set
         '''
-        if G==None:
-            self._G = AdjMatrixDiGraph(len(symbols))
-            self._G.gen_random(6)
-            G = self._G
+        self._G = G
         
         V = len(symbols)
         if V != G.get_V():
@@ -77,23 +76,32 @@ class SymbolDiGraph(object):
         '''
         return self._G
     
-    def get_edge_index(self, i, j):
-        '''
-        Get the number of edges by indices
-        '''
-        return self._G._adj_m[i][j]
-    
-    def get_edge_symbol(self, s1, s2):
-        '''
-        Get the number of edges by symbols
-        '''
-        return self._G._adj_m[self._st[s1]][self._st[s2]]
-    
     def get_keys(self):
         return self._keys
     
     def get_st(self):
         return self._st
+ 
+ 
+class SymbolDiGraphMat(SymbolDiGraph):
+    
+    def __init__(self, symbols, G=None):
+        if G==None:
+            G = AdjMatrixDiGraph(len(symbols))
+            G.gen_random(len(symbols))
+        SymbolDiGraph.__init__(self, symbols, G)
+    
+    def get_edge_by_index(self, i, j):
+        '''
+        Get the number of edges by indices
+        '''
+        return self._G._adj_m[i][j]
+    
+    def get_edge_by_symbol(self, s1, s2):
+        '''
+        Get the number of edges by symbols
+        '''
+        return self._G._adj_m[self._st[s1]][self._st[s2]]
     
     def __str__(self):
         s = "  "
@@ -106,11 +114,51 @@ class SymbolDiGraph(object):
             for w in range(0, self._G._V):
                 s += "%i "%self._G._adj_m[v][w]
             s += "\n"
-        return s
+        return s 
+ 
+ 
+class SymbolDiGraphLst(SymbolDiGraph):
+    
+    def __init__(self, symbols, G=None):
+        if G==None:
+            G = AdjListDiGraph(len(symbols))
+            G.gen_random(len(symbols))
+        SymbolDiGraph.__init__(self, symbols, G)
+    
+    def get_edge_by_index(self, i, j):
+        '''
+        Get the number of edges by indices
+        '''
+        for w in self._G.adj(i):
+            if w.item==j:
+                return w.value
+        
+        return 0
+    
+    def get_edge_by_symbol(self, s1, s2):
+        '''
+        Get the number of edges by symbols
+        '''
+        
+        for w in self._G.adj(self._st[s1]):
+            if w.item==self._st[s2]:
+                return w.value
+        
+        return 0
+    
+ 
+    def __str__(self):
+        s = ""
+        for v in range(0, self._G._V):
+            s += "%s: "%self._keys[v]
+            for w in self._G.adj(v).ListIterator(self._G.adj(v)):
+                s += "->%s"%self._keys[w]
+            s += "\n"
+        return s 
  
 if __name__=="__main__":
     vertices = ['a','b','c','d']
-    sg = SymbolDiGraph(vertices)
+    sg = SymbolDiGraphLst(vertices)
     
     print sg
     

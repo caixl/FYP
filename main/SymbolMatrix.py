@@ -1,7 +1,7 @@
 '''
 Created on 16 Oct, 2014
 
-@author: Caixl
+@author: Xinlei Cai
 '''
 
 class SymbolMatrix():

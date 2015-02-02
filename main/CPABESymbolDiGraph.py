@@ -1,18 +1,20 @@
 '''
 Created on 15 Oct, 2014
+Modified on 2 Feb 2015
 
-@author: Caixl
+@author: Xinlei Cai
 '''
 from charm.schemes.abenc.abenc_bsw07 import CPabe_BSW07
 from charm.toolbox.pairinggroup import PairingGroup
 from charm.adapters.abenc_adapt_hybrid import HybridABEnc as HybridABEnc
 
+import time
 
-from SymbolDiGraph import SymbolDiGraph
+from SymbolDiGraph import SymbolDiGraphMat
 from SymbolMatrix import SymbolMatrix
 from TotalSize import total_size 
 
-
+  
 class CPABESymbolDiGraph:
     
     # the symbol graph
@@ -81,7 +83,7 @@ class CPABESymbolDiGraph:
         self._enc_symbol_matix = SymbolMatrix(size, self._symbol_graph.get_st())
         for i in range(0, size):
             for j in range(0, size):
-                msg = str(self._symbol_graph.get_edge_index(i,j))
+                msg = str(self._symbol_graph.get_edge_by_index(i,j))
                 cell_access_policy = '(%s AND %s)'%((self._symbol_graph.name(i)+'r'),
                                                     (self._symbol_graph.name(j)+'c'))
                 cipher = self._hyb_abe.encrypt(self._master_public_key, 
@@ -138,23 +140,30 @@ class CPABESymbolDiGraph:
   
 if __name__ == '__main__':
     '''Owner side'''
-    sg = SymbolDiGraph(['a','b','c','d'])
+    sg = SymbolDiGraphMat(['a','b','c','d'])
     print sg
     
     #encrypt graph
     abe_graph = CPABESymbolDiGraph(sg)
+    
+    t0 = time.clock()
     abe_graph.setup()
     
+    t1 = time.clock()
+    
     abe_graph.encrypt()
+    t2 = time.clock()
     #abe_graph.print_result()
     
     #bob needs to query graph
     #grant bob access to (a,a)
-    sk_bob_aa = abe_graph.gen_secret_key(['AR','AC','BR'])
-    #grant bob access to (b,b)
-    sk_bob_bb = abe_graph.gen_secret_key(['BR','BC'])
+    sk_bob_aa = abe_graph.gen_secret_key(['AR','BR','AC','BC'])
     
-    sk_bob_cc = abe_graph.gen_secret_key(['CR'])
+    t3 = time.clock()
+    #grant bob access to (b,b)
+    #sk_bob_bb = abe_graph.gen_secret_key(['BR','BC'])
+    
+    #sk_bob_cc = abe_graph.gen_secret_key(['CR'])
     
     
     #print total_size(abe_graph.gen_secret_key(abe_graph._attributes))
@@ -164,17 +173,21 @@ if __name__ == '__main__':
     
     '''User/Untrusted Server side'''
     
-    query = [['a','a'], ['b','a']]
+    query = [['a','b'], ['b','a']]
     
     result1 = CPABESymbolDiGraph.decrypt(abe_graph._master_public_key, 
                                         sk_bob_aa, 
                                         abe_graph._enc_symbol_matix, 
                                         query)
+    
+    t4 = time.clock()
     print '%s : %s'%(query,result1)
+    print '\nCP-ABE Time Spent\n-----\nSetup:%fs\nEncryption:%fs\nKeyGen:%fs\nDecryption:%fs\n-----\nTotal:%fs'%(t1-t0, t2-t1, t3-t2, t4-t3, t4-t0)
     
     
     'Decryption using wrong key crashes Python'
     
+    '''
     query = [['a','a'], ['a','b']]
     
     result2 = CPABESymbolDiGraph.decrypt(abe_graph._master_public_key, 
@@ -182,7 +195,7 @@ if __name__ == '__main__':
                                         abe_graph._enc_symbol_matix, 
                                         query)
     print '%s : %s'%(query,result2)
-    
+    '''
     
     
     #sk_bob_aa.extend(query_bb)

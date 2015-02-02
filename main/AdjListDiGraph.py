@@ -1,17 +1,18 @@
 '''
-Created on 8 Oct, 2014
+Created on 16 Jan, 2015
 
 @author: Xinlei Cai
 '''
 from random import randint
+from Bag import Bag
 
-class AdjMatrixDiGraph(object):
+class AdjListDiGraph(object):
     '''
     Graph implemented using adjacency matrix
     '''
     
-    #adjacency matrix, represented by a 2D array
-    _adj_m = []
+    #adjacency list
+    _adj_l = []
     #number of vertices and edges
     _V = 0
     _E = 0
@@ -25,8 +26,9 @@ class AdjMatrixDiGraph(object):
             raise RuntimeError("Number of vertices must be nonnegative")
         self._V = V
         self._E = 0
-        for _ in range (0, V):
-            self._adj_m.append([False] * V)
+        self._adj_l = [None] * V
+        for i in range (V):
+            self._adj_l[i] = Bag()
         
     def gen_random(self, E):
         '''
@@ -49,58 +51,50 @@ class AdjMatrixDiGraph(object):
     def get_V(self):
         return self._V
     
+    def validateVertex(self, v):
+        if v<0 or v>=self._V:
+            raise RuntimeError("vertex %s is not between 0 and %s"%(v,self.V-1))
+            
+          
+        
     def add_edge(self, v, w):
         '''
         add directed edge v->w
         '''
-        if not self._adj_m[v][w]: 
-            self._E += 1
-        self._adj_m[v][w] = True
-        
-     
-    class AdjIterator():
-        _v = 0
-        _w = 0
-        _G = None
-        
-        def __init__(self, v, G):
-            self._v = v
-            self._G = G
-            
-        def __iter__(self):
-            '''
-            return the iterator itself
-            '''
-            return self
-        
-        def has_next(self):
-            while self._w < self._G._V:
-                if self._G._adj_m[self._v][self._w]:
-                    return True
-                self._w += 1
-            return False
-        
-        def next(self):
-            if self.has_next():
-                self._w += 1
-                return self._w-1
-            else:
-                raise StopIteration()
+        self.validateVertex(v)
+        self.validateVertex(w)
+        for elem in self.adj(v).ListIterator(self._adj_l[v]):
+            if elem==w or w==v:
+                return
+        self._adj_l[v].add(w)
+        self._E += 1
     
     def adj(self, v):
-        return self.AdjIterator(v, self)
+        self.validateVertex(v)
+        return self._adj_l[v]
+    
+    def outdegree(self,v):
+        self.validateVertex(v)
+        return self._adj_l[v].size()
+    
+    def reverse(self):
+        R = AdjListDiGraph()
+        for v in range(self._V):
+            for w in self.adj(v):
+                R.addEdge(w,v)
+        return R
     
     def __str__(self):
         s = "V:%i E:%i \n"%(self._V, self._E)
         for v in range(0, self._V):
             s += "%i: "%v
-            for w in self.adj(v):
+            for w in self.adj(v).ListIterator(self._adj_l[v]):
                 s += "%i "%w
             s += "\n"
         return s
         
 if __name__=="__main__":
-    G = AdjMatrixDiGraph(10)
+    G = AdjListDiGraph(10)
     G.gen_random(10)
     print G
     
