@@ -39,7 +39,7 @@ class Bag:
         oldfirst = self._first
         self._first = Node()
         self._first.item = item
-        self._first.value = True
+        #self._first.value = True
         self._first.next = oldfirst
         self._N += 1
         

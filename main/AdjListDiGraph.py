@@ -43,6 +43,9 @@ class AdjListDiGraph(object):
         while self._E != E:
             v = randint(0,V-1)
             w = randint(0,V-1)
+            while v==w:
+                v = randint(0,V-1)
+                w = randint(0,V-1)
             self.add_edge(v, w)
         
     def get_E(self):
@@ -63,7 +66,7 @@ class AdjListDiGraph(object):
         '''
         self.validateVertex(v)
         self.validateVertex(w)
-        for elem in self.adj(v).ListIterator(self._adj_l[v]):
+        for elem in self.adj(v):
             if elem==w or w==v:
                 return
         self._adj_l[v].add(w)
@@ -71,7 +74,7 @@ class AdjListDiGraph(object):
     
     def adj(self, v):
         self.validateVertex(v)
-        return self._adj_l[v]
+        return self._adj_l[v].ListIterator(self._adj_l[v])
     
     def outdegree(self,v):
         self.validateVertex(v)
@@ -88,7 +91,7 @@ class AdjListDiGraph(object):
         s = "V:%i E:%i \n"%(self._V, self._E)
         for v in range(0, self._V):
             s += "%i: "%v
-            for w in self.adj(v).ListIterator(self._adj_l[v]):
+            for w in self.adj(v):
                 s += "%i "%w
             s += "\n"
         return s

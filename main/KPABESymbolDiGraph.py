@@ -30,8 +30,6 @@ class KPABESymbolDiGraph:
     
     # Encrypted matrix
     _enc_symbol_matix = {}
-    # Random parameters
-    _encRand = []
     
     def __init__(self, symbol_graph):
         '''

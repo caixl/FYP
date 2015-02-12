@@ -122,7 +122,7 @@ class SymbolDiGraphLst(SymbolDiGraph):
     def __init__(self, symbols, G=None):
         if G==None:
             G = AdjListDiGraph(len(symbols))
-            G.gen_random(len(symbols))
+            G.gen_random(len(symbols)*2)
         SymbolDiGraph.__init__(self, symbols, G)
     
     def get_edge_by_index(self, i, j):
@@ -146,12 +146,14 @@ class SymbolDiGraphLst(SymbolDiGraph):
         
         return 0
     
+    def adj(self, v):
+        return self._G.adj(v)
  
     def __str__(self):
         s = ""
         for v in range(0, self._G._V):
             s += "%s: "%self._keys[v]
-            for w in self._G.adj(v).ListIterator(self._G.adj(v)):
+            for w in self._G.adj(v):
                 s += "->%s"%self._keys[w]
             s += "\n"
         return s 
