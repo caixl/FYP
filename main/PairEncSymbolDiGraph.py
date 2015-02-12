@@ -88,7 +88,7 @@ class PairEncSymbolDiGraph:
         size = len(self._symbol_graph.get_st())
         for v in range(size):
             for w in self._symbol_graph.adj(v):
-                self._enc_adjlist.add_item(self._pk['g']**(self._mk['s'][self._symbol_graph.get_keys()[w]]
+                self._enc_adjlist.add_item(self._pk['g']**(self._mk['s'][self._symbol_graph.get_keys()[v]]
                                                            *self._mk['t'][self._symbol_graph.get_keys()[w]])
                                            ,v)
        
@@ -108,8 +108,8 @@ class PairEncSymbolDiGraph:
         for attr in query_attr_list:
             cipherlist = cipher_adjlist.get_list(attr)
             for node in cipherlist:
+                candi = pair(node,sk['gas'][attr])
                 for key in sk['g2at']:
-                    candi = pair(node,sk['gas'][key])
                     if candi == sk['g2at'][key]:
                         res_graph.add_edge(attr,key)
         
