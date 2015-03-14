@@ -1,10 +1,10 @@
 '''
-Modified on 8 Feb 2015
+Modified on 26 Feb 2015
 
 @author: Xinlei Cai
 '''
 
-from charm.toolbox.pairinggroup import PairingGroup,pair,G1,G2,ZR
+from charm.toolbox.pairinggroup import PairingGroup,pair,G1,G2,GT,ZR
 from SymbolDiGraph import SymbolDiGraphLst
 from SymbolLinkedlists import SymbolLinkedlists
 from AdjListDiGraph import AdjListDiGraph
@@ -37,9 +37,11 @@ class PairEncSymbolDiGraph:
         '''
         generate public parameters
         '''
-        g, gp = self._group.random(G1), self._group.random(G2)
+        g = self._group.random(G1)
+        gp = self._group.random(G2)
         # initialize pre-processing for generators
-        g.initPP(); gp.initPP()
+        g.initPP();
+        gp.initPP()
         
         mk_num = self._symbol_graph.get_V()
         #self._mk_s = [None]*mk_num
@@ -49,7 +51,7 @@ class PairEncSymbolDiGraph:
             self._mk['s'][self._symbol_graph.get_keys()[i]] = self._group.random(ZR)
             self._mk['t'][self._symbol_graph.get_keys()[i]] = self._group.random(ZR)
         
-        self._pk = { 'g':g}
+        self._pk = { 'g':g, 'gp':gp}
         
         #testing
         '''
@@ -57,8 +59,8 @@ class PairEncSymbolDiGraph:
         s = self._group.random(ZR)
         t = self._group.random(ZR)
         gs = g**(s*t)
-        gas = g**(a/s)
-        g2at = pair(g,g)**(a*t)
+        gas = gp**(a/s)
+        g2at = pair(g,gp)**(a*t)
         print pair(gs,gas)
         print g2at
         '''
@@ -137,8 +139,8 @@ class PairEncSymbolDiGraph:
         alpha = self._group.random(ZR)
         sk = {'gas':{},'g2at':{}}
         for attr in attr_list:
-            gas = self._pk['g']**(alpha/self._mk['s'][attr])
-            g2at = pair(self._pk['g'],self._pk['g'])**(alpha*self._mk['t'][attr])
+            gas = self._pk['gp']**(alpha/self._mk['s'][attr])
+            g2at = pair(self._pk['g'],self._pk['gp'])**(alpha*self._mk['t'][attr])
             sk['gas'][attr] = gas
             sk['g2at'][attr] = g2at   
             
@@ -171,52 +173,6 @@ if __name__ == '__main__':
     sk = list_graph.gen_secret_key(['a','b','c'])
     print sk
     
-    res = list_graph.decrypt(sk, cipher_adjlist, ['a','b','c'])
+    res = PairEncSymbolDiGraph.decrypt(sk, cipher_adjlist, ['a','b','c'])
     print res
     
-    """
-    t0 = time.clock()
-    abe_graph.setup()
-    t1 = time.clock()
-    
-    abe_graph.encrypt()
-    #abe_graph.print_result()
-    t2 = time.clock()
-    #sk_bob_00 = abe_graph.gen_secret_key(['AR','AC','CC'])
-    #bob needs to query graph
-    #grant bob access to (a,a)
-    sk_bob_aa = abe_graph.gen_secret_key('(AR OR BR) AND (AC OR BC)')
-    t3 = time.clock()
-    #grant bob access to (b,b)
-    #sk_bob_bb = abe_graph.gen_secret_key('BR AND BC')
-    
-    #sk_bob_cc = abe_graph.gen_secret_key(['CR'])
-    
-    #print sk_bob_00
-    
-    #print total_size(abe_graph.gen_secret_key(abe_graph._attributes))
-    #print total_size(sk_bob_00)
-    #print total_size(sk_bob_aa)
-    #print total_size(sk_bob_bb)
-    #print total_size(sk_bob_cc)
-    
-    '''User/Untrusted Server side'''
-    
-    query = [['a','b'], ['b','a']]
-    result1 = KPABESymbolDiGraph.decrypt(sk_bob_aa, 
-                                        abe_graph._enc_symbol_matix, 
-                                        query)
-    t4 = time.clock()
-    print '%s: %s'%(query , result1)
-    print '\nKP-ABE Time Spent\n-----\nSetup:%fs\nEncryption:%fs\nKeyGen:%fs\nDecryption:%fs\n-----\nTotal:%fs'%(t1-t0, t2-t1, t3-t2, t4-t3, t4-t0)
-    
-    ''' decryption with wrong key still crashes python'''
-    '''
-    query = [['a','b'], ['b','a']]
-    result2 = KPABESymbolDiGraph.decrypt(sk_bob_aa, 
-                                        abe_graph._enc_symbol_matix, 
-                                        query)
-    
-    print '%s: %s'%(query , result2)
-    '''
-    """

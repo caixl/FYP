@@ -4,7 +4,8 @@ Created on 16 Jan, 2015
 @author: Xinlei Cai
 '''
 from random import randint
-from Bag import Bag
+from collections import deque
+#from Bag import Bag
 
 class AdjListDiGraph(object):
     '''
@@ -28,7 +29,7 @@ class AdjListDiGraph(object):
         self._E = 0
         self._adj_l = [None] * V
         for i in range (V):
-            self._adj_l[i] = Bag()
+            self._adj_l[i] = deque()
         
     def gen_random(self, E):
         '''
@@ -69,12 +70,12 @@ class AdjListDiGraph(object):
         for elem in self.adj(v):
             if elem==w or w==v:
                 return
-        self._adj_l[v].add(w)
+        self._adj_l[v].append(w)
         self._E += 1
     
     def adj(self, v):
         self.validateVertex(v)
-        return self._adj_l[v].ListIterator(self._adj_l[v])
+        return self._adj_l[v]
     
     def outdegree(self,v):
         self.validateVertex(v)
