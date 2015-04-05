@@ -44,9 +44,6 @@ class AdjListDiGraph(object):
         while self._E != E:
             v = randint(0,V-1)
             w = randint(0,V-1)
-            while v==w:
-                v = randint(0,V-1)
-                w = randint(0,V-1)
             self.add_edge(v, w)
         
     def get_E(self):
@@ -68,7 +65,7 @@ class AdjListDiGraph(object):
         self.validateVertex(v)
         self.validateVertex(w)
         for elem in self.adj(v):
-            if elem==w or w==v:
+            if elem==w:
                 return
         self._adj_l[v].append(w)
         self._E += 1
@@ -99,7 +96,7 @@ class AdjListDiGraph(object):
         
 if __name__=="__main__":
     G = AdjListDiGraph(10)
-    G.gen_random(10)
+    G.gen_random(100)
     print G
     
     

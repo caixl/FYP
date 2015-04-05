@@ -16,17 +16,32 @@ class AdjMatrixDiGraph(object):
     _V = 0
     _E = 0
     
-    def __init__(self, V):
+    def __init__(self, V=None, mat=None):
         '''
         Constructor
         Empty graph with _V vertices
         '''
+        if mat!=None:
+            self._adj_m = mat
+            
+            for i in range(0, len(self._adj_m)):
+                for j in range(0,len(self._adj_m[i]) ):
+                    if self._adj_m[i][j]==1:
+                        self._E+=1
+            self._V = len(self._adj_m)
+            return
+        
+        if V==None:
+            raise RuntimeError("Number of vertices not specified")
+        
         if V < 0:
             raise RuntimeError("Number of vertices must be nonnegative")
         self._V = V
         self._E = 0
         for _ in range (0, V):
-            self._adj_m.append([False] * V)
+            self._adj_m.append([0] * V)
+            
+        
         
     def gen_random(self, E):
         '''
@@ -55,7 +70,7 @@ class AdjMatrixDiGraph(object):
         '''
         if not self._adj_m[v][w]: 
             self._E += 1
-        self._adj_m[v][w] = True
+        self._adj_m[v][w] = 1
         
      
     class AdjIterator():
@@ -76,9 +91,9 @@ class AdjMatrixDiGraph(object):
         def has_next(self):
             while self._w < self._G._V:
                 if self._G._adj_m[self._v][self._w]:
-                    return True
+                    return 1
                 self._w += 1
-            return False
+            return 0
         
         def next(self):
             if self.has_next():

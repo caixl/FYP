@@ -12,6 +12,7 @@ import time
 
 from SymbolDiGraph import SymbolDiGraphMat
 from SymbolMatrix import SymbolMatrix
+from AdjMatrixDiGraph import AdjMatrixDiGraph
 from TotalSize import total_size 
 
   
@@ -90,9 +91,9 @@ class CPABESymbolDiGraph:
                 self._enc_symbol_matix.set_matrix(cipher, i, j)
 
         return True
-    
+
     @classmethod
-    def decrypt(self, master_public_key, sk, cipher_matrix, queries):
+    def decrypt_query(self, master_public_key, sk, cipher_matrix, queries):
         '''
         Decryption requires master_public_key, user secret key, and cipher
         '''
@@ -110,6 +111,33 @@ class CPABESymbolDiGraph:
             msg += hyb_abe.decrypt(master_public_key, sk, cipher) + " "
         
         return msg
+
+    
+    @classmethod
+    def decrypt(self, master_public_key, sk, cipher_matrix, vertices):
+        '''
+        Decryption requires master_public_key, user secret key, and cipher
+        '''
+        group = PairingGroup('SS512')
+        cpabe = CPabe_BSW07(group)
+        hyb_abe = HybridABEnc(cpabe, group)
+        
+        N = len(vertices)
+        
+        resMat = [None]*N;
+        for i in range(0,N):
+            resMat[i] = [None]*N
+            for j in range(0,N):
+                #convert to lower case
+                s = vertices[i].lower()
+                s2 = vertices[j].lower()
+            
+                cipher = cipher_matrix.get_cell_by_symbol(s, s2)
+                resMat[i][j] = hyb_abe.decrypt(master_public_key, sk, cipher)
+        
+        result = AdjMatrixDiGraph(mat=resMat)
+        return SymbolDiGraphMat(G=result, vertices=vertices)
+    
     
     def gen_secret_key(self, attributes):
         '''
@@ -138,7 +166,10 @@ class CPABESymbolDiGraph:
   
 if __name__ == '__main__':
     '''Owner side'''
-    sg = SymbolDiGraphMat(['a','b','c','d'])
+    nodes = []
+    for i in xrange(0,4):
+        nodes.append('v%d'%(i+1))
+    sg = SymbolDiGraphMat(nodes, rand_E=10)
     print sg
     
     #encrypt graph
@@ -151,11 +182,13 @@ if __name__ == '__main__':
     
     abe_graph.encrypt()
     t2 = time.clock()
-    #abe_graph.print_result()
+    abe_graph.print_result()
     
     #bob needs to query graph
     #grant bob access to (a,a)
-    sk_bob_aa = abe_graph.gen_secret_key(['AR','BR','AC','BC'])
+    sk_bob_aa = abe_graph.gen_secret_key(['V1R','V2R','V1C','V2C'])
+    print "key:"
+    print sk_bob_aa
     
     t3 = time.clock()
     #grant bob access to (b,b)
@@ -171,7 +204,7 @@ if __name__ == '__main__':
     
     '''User/Untrusted Server side'''
     
-    query = [['a','b'], ['b','a']]
+    query = ['v1','v2']
     
     result1 = CPABESymbolDiGraph.decrypt(abe_graph._master_public_key, 
                                         sk_bob_aa, 
@@ -179,7 +212,7 @@ if __name__ == '__main__':
                                         query)
     
     t4 = time.clock()
-    print '%s : %s'%(query,result1)
+    print result1
     print '\nCP-ABE Time Spent\n-----\nSetup:%fs\nEncryption:%fs\nKeyGen:%fs\nDecryption:%fs\n-----\nTotal:%fs'%(t1-t0, t2-t1, t3-t2, t4-t3, t4-t0)
     
     

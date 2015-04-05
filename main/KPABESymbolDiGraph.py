@@ -10,6 +10,7 @@ from charm.adapters.kpabenc_adapt_hybrid import HybridABEnc as HybridKPABEnc
 import time
 
 from SymbolDiGraph import SymbolDiGraphMat
+from AdjMatrixDiGraph import AdjMatrixDiGraph
 from SymbolMatrix import SymbolMatrix
 
 class KPABESymbolDiGraph:
@@ -81,7 +82,7 @@ class KPABESymbolDiGraph:
         return True
     
     @classmethod
-    def decrypt(self, sk, cipher_matrix, queries):
+    def decrypt_query(self, sk, cipher_matrix, queries):
         '''
         Decryption requires master_public_key, user secret key, and cipher
         '''
@@ -98,6 +99,34 @@ class KPABESymbolDiGraph:
             msg +=  hyb_abe.decrypt(cipher, sk) + " "
         
         return msg
+    
+    @classmethod
+    def decrypt(self, sk, cipher_matrix, vertices):
+        '''
+        Decryption requires master_public_key, user secret key, and cipher
+        '''
+        group = PairingGroup('SS512')
+        kpabe = KPabe(group)
+        hyb_abe = HybridKPABEnc(kpabe, group)
+        
+        N = len(vertices)
+        
+        resMat = [None]*N;
+        for i in range(0,N):
+            resMat[i] = [None]*N
+            for j in range(0,N):
+                #convert to lower case
+                s = vertices[i].lower()
+                s2 = vertices[j].lower()
+            
+                cipher = cipher_matrix.get_cell_by_symbol(s, s2)
+                resMat[i][j] = hyb_abe.decrypt(cipher, sk)
+        
+        result = AdjMatrixDiGraph(mat=resMat)
+        return SymbolDiGraphMat(G=result, vertices=vertices)
+    
+    
+    
     
     def gen_secret_key(self, policy):
         '''
@@ -124,7 +153,10 @@ class KPABESymbolDiGraph:
   
 if __name__ == '__main__':
     '''Owner side'''
-    sg = SymbolDiGraphMat(['a','b','c','d'])
+    nodes = []
+    for i in xrange(0,4):
+        nodes.append('v%d'%(i+1))
+    sg = SymbolDiGraphMat(nodes,rand_E=10)
     print sg
     
     #encrypt graph
@@ -135,12 +167,14 @@ if __name__ == '__main__':
     t1 = time.clock()
     
     abe_graph.encrypt()
-    #abe_graph.print_result()
+    abe_graph.print_result()
     t2 = time.clock()
     #sk_bob_00 = abe_graph.gen_secret_key(['AR','AC','CC'])
     #bob needs to query graph
     #grant bob access to (a,a)
-    sk_bob_aa = abe_graph.gen_secret_key('(AR OR BR) AND (AC OR BC)')
+    sk_bob_aa = abe_graph.gen_secret_key('(v1R OR v2R) AND (v1C OR v2C)')
+    print "key:"
+    print sk_bob_aa
     t3 = time.clock()
     #grant bob access to (b,b)
     #sk_bob_bb = abe_graph.gen_secret_key('BR AND BC')
@@ -157,12 +191,13 @@ if __name__ == '__main__':
     
     '''User/Untrusted Server side'''
     
-    query = [['a','b'], ['b','a']]
+    query = ['v1','v2']
     result1 = KPABESymbolDiGraph.decrypt(sk_bob_aa, 
                                         abe_graph._enc_symbol_matix, 
                                         query)
     t4 = time.clock()
-    print '%s: %s'%(query , result1)
+    #print '%s: %s'%(query , result1)
+    print result1
     print '\nKP-ABE Time Spent\n-----\nSetup:%fs\nEncryption:%fs\nKeyGen:%fs\nDecryption:%fs\n-----\nTotal:%fs'%(t1-t0, t2-t1, t3-t2, t4-t3, t4-t0)
     
     ''' decryption with wrong key still crashes python'''

@@ -8,6 +8,8 @@ from charm.toolbox.pairinggroup import PairingGroup,pair,G1,G2,GT,ZR
 from SymbolDiGraph import SymbolDiGraphLst
 from SymbolLinkedlists import SymbolLinkedlists
 from AdjListDiGraph import AdjListDiGraph
+import time
+import sys
 
 
 class PairEncSymbolDiGraph:
@@ -42,6 +44,7 @@ class PairEncSymbolDiGraph:
         # initialize pre-processing for generators
         g.initPP();
         gp.initPP()
+        print sys.getsizeof(g)
         
         mk_num = self._symbol_graph.get_V()
         #self._mk_s = [None]*mk_num
@@ -162,17 +165,28 @@ if __name__ == '__main__':
     pass
     '''Owner side'''
     
-    sg = SymbolDiGraphLst(['a','b','c','d'])
+    nodes = []
+    for i in xrange(0,10):
+        nodes.append('v%d'%(i+1))
+        
+    sg = SymbolDiGraphLst(nodes,rand_E=100)
     print sg
     
     #encrypt graph
     list_graph = PairEncSymbolDiGraph(sg)
+    t0 = time.clock()
     list_graph.setup()
+    t1 = time.clock()
     cipher_adjlist = list_graph.encrypt()
+    t2 = time.clock()
     
-    sk = list_graph.gen_secret_key(['a','b','c'])
+    sk = list_graph.gen_secret_key(['v1','v2'])
+    t3 = time.clock()
     print sk
     
-    res = PairEncSymbolDiGraph.decrypt(sk, cipher_adjlist, ['a','b','c'])
+    res = PairEncSymbolDiGraph.decrypt(sk, cipher_adjlist, ['v1','v2'])
+    t4 = time.clock()
     print res
+    print '\nAdjlist Pairing Time Spent\n-----\nSetup:%fs\nEncryption:%fs\nKeyGen:%fs\nDecryption:%fs\n-----\nTotal:%fs'%(t1-t0, t2-t1, t3-t2, t4-t3, t4-t0)
+    
     

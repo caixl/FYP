@@ -35,7 +35,10 @@ class SymbolDiGraph(object):
             
         for label in self._st.keys():
             self._keys[self._st[label]] = label
-
+            
+        
+        
+        
     def add_edge(self, s1, s2):
         '''
         Add an edge to the graph
@@ -85,12 +88,22 @@ class SymbolDiGraph(object):
  
 class SymbolDiGraphMat(SymbolDiGraph):
     
-    def __init__(self, symbols, G=None):
+    def __init__(self, symbols=None, G=None, rand_E=None,vertices=None):
+        if vertices!=None:
+            symbols = {}
+            for i in range(0,len(vertices)):
+                symbols[vertices[i]] = i
+        
         if G==None:
             G = AdjMatrixDiGraph(len(symbols))
-            G.gen_random(len(symbols))
+            if rand_E==None:
+                G.gen_random(len(symbols))
+            else:
+                G.gen_random(rand_E)
+                
         SymbolDiGraph.__init__(self, symbols, G)
     
+
     def get_edge_by_index(self, i, j):
         '''
         Get the number of edges by indices
@@ -104,25 +117,28 @@ class SymbolDiGraphMat(SymbolDiGraph):
         return self._G._adj_m[self._st[s1]][self._st[s2]]
     
     def __str__(self):
-        s = "  "
+        s = "\t"
         for v in range(0, self._G._V):
-            s += "%s "%self._keys[v]
+            s += "%s\t"%self._keys[v]
         
         s += "\n"   
         for v in range(0, self._G._V):
-            s += "%s "%self._keys[v]
+            s += "%s\t"%self._keys[v]
             for w in range(0, self._G._V):
-                s += "%i "%self._G._adj_m[v][w]
+                s += "%s\t"%self._G._adj_m[v][w]
             s += "\n"
         return s 
  
  
 class SymbolDiGraphLst(SymbolDiGraph):
     
-    def __init__(self, symbols, G=None):
+    def __init__(self, symbols, G=None, rand_E=None):
         if G==None:
             G = AdjListDiGraph(len(symbols))
-            G.gen_random(len(symbols)*2)
+            if rand_E==None:
+                G.gen_random(len(symbols))
+            else:
+                G.gen_random(rand_E)
         SymbolDiGraph.__init__(self, symbols, G)
     
     def get_edge_by_index(self, i, j):
@@ -161,6 +177,8 @@ class SymbolDiGraphLst(SymbolDiGraph):
 if __name__=="__main__":
     vertices = ['a','b','c','d']
     sg = SymbolDiGraphLst(vertices)
+    sg2 = SymbolDiGraphMat(vertices)
     
     print sg
+    print sg2
     
