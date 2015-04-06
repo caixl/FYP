@@ -58,10 +58,12 @@ class SymbolLinkedlists():
         return self._longest
     
     def __str__(self):
+        """
         s = ""
         for v in range(len(self._st)):
             s += "%s: "%self._keys[v]
             for w in self._encList[v]:
                 s += "->%s"%w
             s += "\n"
-        return s 
+        """
+        return str(self._encList) 

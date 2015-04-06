@@ -35,15 +35,14 @@ class AdjListDiGraph(object):
         '''
         random graph with _V vertices and _E edges
         '''
-        V = self._V
         if E < 0:
             raise RuntimeError("Number of edges must be nonnegative")
-        if E > V*V:
+        if E > self._V*self._V:
             raise RuntimeError("Too many edges")
         
         while self._E != E:
-            v = randint(0,V-1)
-            w = randint(0,V-1)
+            v = randint(0,self._V-1)
+            w = randint(0,self._V-1)
             self.add_edge(v, w)
         
     def get_E(self):
@@ -54,7 +53,7 @@ class AdjListDiGraph(object):
     
     def validateVertex(self, v):
         if v<0 or v>=self._V:
-            raise RuntimeError("vertex %s is not between 0 and %s"%(v,self.V-1))
+            raise RuntimeError("vertex %s is not between 0 and %s"%(v,self._V-1))
             
           
         
@@ -63,7 +62,7 @@ class AdjListDiGraph(object):
         add directed edge v->w
         '''
         self.validateVertex(v)
-        self.validateVertex(w)
+        #self.validateVertex(w) # comment for subgraph
         for elem in self.adj(v):
             if elem==w:
                 return

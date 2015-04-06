@@ -13,7 +13,6 @@ import time
 from SymbolDiGraph import SymbolDiGraphMat
 from SymbolMatrix import SymbolMatrix
 from AdjMatrixDiGraph import AdjMatrixDiGraph
-from TotalSize import total_size 
 
   
 class CPABESymbolDiGraph:
@@ -22,7 +21,7 @@ class CPABESymbolDiGraph:
     _symbol_graph = None
     # operating group
     _group = None
-    # Cipertext-Policy Attribute-Based Encryption object
+    # Cipertext-Policy AtSymtribute-Based Encryption object
     _cpabe = None
     # hybrid
     _hyb_abe = None
@@ -33,7 +32,7 @@ class CPABESymbolDiGraph:
     _secret_key = 0
     
     # Encrypted matrix
-    _enc_symbol_matix = {}
+    #_enc_symbol_matix = {}
     
     def __init__(self, symbol_graph):
         '''
@@ -69,7 +68,7 @@ class CPABESymbolDiGraph:
     def setup(self):
         # ABE setup phase
         (self._master_public_key, self._master_key) = self._hyb_abe.setup()
-        
+        return self._master_public_key, self._master_key
         
     def encrypt(self):
         '''
@@ -78,8 +77,7 @@ class CPABESymbolDiGraph:
         assert self._master_public_key, "Please do setup first."
             
         size = self._symbol_graph.get_V();
-        
-        self._enc_symbol_matix = SymbolMatrix(size, self._symbol_graph.get_st())
+        enc_symbol_matix = SymbolMatrix(size, self._symbol_graph.get_st())
         for i in range(0, size):
             for j in range(0, size):
                 msg = str(self._symbol_graph.get_edge_by_index(i,j))
@@ -88,9 +86,8 @@ class CPABESymbolDiGraph:
                 cipher = self._hyb_abe.encrypt(self._master_public_key, 
                                                msg, 
                                                cell_access_policy)
-                self._enc_symbol_matix.set_matrix(cipher, i, j)
-
-        return True
+                enc_symbol_matix.set_matrix(cipher, i, j)
+        return enc_symbol_matix
 
     @classmethod
     def decrypt_query(self, master_public_key, sk, cipher_matrix, queries):
@@ -134,12 +131,14 @@ class CPABESymbolDiGraph:
             
                 cipher = cipher_matrix.get_cell_by_symbol(s, s2)
                 resMat[i][j] = hyb_abe.decrypt(master_public_key, sk, cipher)
+                if resMat[i][j]==False:
+                    return False
         
         result = AdjMatrixDiGraph(mat=resMat)
-        return SymbolDiGraphMat(G=result, vertices=vertices)
+        return SymbolDiGraphMat(vertices, G=result)
     
     
-    def gen_secret_key(self, attributes):
+    def key_generation(self, attributes):
         '''
         Generate individual's secret key using the given attributes
         '''
@@ -153,8 +152,8 @@ class CPABESymbolDiGraph:
                                   self._master_key,
                                   attributes)
         
-    def print_result(self):
-        print self._enc_symbol_matix
+    #def print_result(self):
+    #    print self._enc_symbol_matix
     
     def out_to_file(self, filename):
         pass
@@ -180,36 +179,36 @@ if __name__ == '__main__':
     
     t1 = time.clock()
     
-    abe_graph.encrypt()
+    encMat = abe_graph.encrypt()
     t2 = time.clock()
-    abe_graph.print_result()
+    print encMat
     
     #bob needs to query graph
     #grant bob access to (a,a)
-    sk_bob_aa = abe_graph.gen_secret_key(['V1R','V2R','V1C','V2C'])
+    sk_bob_aa = abe_graph.key_generation(['V1R','V2R','V1C','V2C'])
     print "key:"
     print sk_bob_aa
     
     t3 = time.clock()
     #grant bob access to (b,b)
-    #sk_bob_bb = abe_graph.gen_secret_key(['BR','BC'])
+    #sk_bob_bb = abe_graph.key_generation(['BR','BC'])
     
-    #sk_bob_cc = abe_graph.gen_secret_key(['CR'])
+    #sk_bob_cc = abe_graph.key_generation(['CR'])
     
     
-    #print total_size(abe_graph.gen_secret_key(abe_graph._attributes))
+    #print total_size(abe_graph.key_generation(abe_graph._attributes))
     #print total_size(sk_bob_aa)
     #print total_size(sk_bob_bb)
     #print total_size(sk_bob_cc)
     
     '''User/Untrusted Server side'''
     
-    query = ['v1','v2']
+    subgraph = ['v1','v2']
     
     result1 = CPABESymbolDiGraph.decrypt(abe_graph._master_public_key, 
                                         sk_bob_aa, 
-                                        abe_graph._enc_symbol_matix, 
-                                        query)
+                                        encMat, 
+                                        subgraph)
     
     t4 = time.clock()
     print result1

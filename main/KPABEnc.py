@@ -30,13 +30,13 @@ class KPABESymbolDiGraph:
     _secret_key = 0
     
     # Encrypted matrix
-    _enc_symbol_matix = {}
+    #_enc_symbol_matix = {}
     
     def __init__(self, symbol_graph):
         '''
         Constructor
         '''
-        # initialize CPABE object
+        # initialize CPABEnc object
         self._group = PairingGroup('SS512')
         self._kpabe = KPabe(self._group)
         self._hyb_abe = HybridKPABEnc(self._kpabe, self._group)
@@ -57,6 +57,7 @@ class KPABESymbolDiGraph:
     def setup(self):
         # ABE setup phase
         (self._master_public_key, self._master_key) = self._hyb_abe.setup()
+        return self._master_public_key, self._master_key
         
         
     def encrypt(self):
@@ -67,7 +68,7 @@ class KPABESymbolDiGraph:
             
         size = self._symbol_graph.get_V();
         
-        self._enc_symbol_matix = SymbolMatrix(size, self._symbol_graph.get_st())
+        enc_symbol_matix = SymbolMatrix(size, self._symbol_graph.get_st())
         for i in range(0, size):
             for j in range(0, size):
                 msg = str(self._symbol_graph.get_edge_by_index(i,j))
@@ -77,9 +78,9 @@ class KPABESymbolDiGraph:
                                                msg, 
                                                [(self._symbol_graph.name(i)+'r').upper(), 
                                                 (self._symbol_graph.name(j)+'c').upper()])
-                self._enc_symbol_matix.set_matrix(cipher, i, j)
+                enc_symbol_matix.set_matrix(cipher, i, j)
 
-        return True
+        return enc_symbol_matix
     
     @classmethod
     def decrypt_query(self, sk, cipher_matrix, queries):
@@ -121,14 +122,16 @@ class KPABESymbolDiGraph:
             
                 cipher = cipher_matrix.get_cell_by_symbol(s, s2)
                 resMat[i][j] = hyb_abe.decrypt(cipher, sk)
+                if resMat[i][j]==False:
+                    return False
         
         result = AdjMatrixDiGraph(mat=resMat)
-        return SymbolDiGraphMat(G=result, vertices=vertices)
+        return SymbolDiGraphMat(vertices, G=result)
     
     
     
     
-    def gen_secret_key(self, policy):
+    def key_generation(self, policy):
         '''
         Generate individual's secret key using the given policy
         '''
@@ -140,8 +143,8 @@ class KPABESymbolDiGraph:
                                   self._master_key,
                                   policy)
         
-    def print_result(self):
-        print self._enc_symbol_matix
+    #def print_result(self):
+    #    print self._enc_symbol_matix
     
     def out_to_file(self, filename):
         pass
@@ -166,24 +169,24 @@ if __name__ == '__main__':
     abe_graph.setup()
     t1 = time.clock()
     
-    abe_graph.encrypt()
-    abe_graph.print_result()
+    encMat = abe_graph.encrypt()
     t2 = time.clock()
-    #sk_bob_00 = abe_graph.gen_secret_key(['AR','AC','CC'])
+    print encMat
+    #sk_bob_00 = abe_graph.key_generation(['AR','AC','CC'])
     #bob needs to query graph
     #grant bob access to (a,a)
-    sk_bob_aa = abe_graph.gen_secret_key('(v1R OR v2R) AND (v1C OR v2C)')
+    sk_bob_aa = abe_graph.key_generation('(v1R OR v2R) AND (v1C OR v2C)')
     print "key:"
     print sk_bob_aa
     t3 = time.clock()
     #grant bob access to (b,b)
-    #sk_bob_bb = abe_graph.gen_secret_key('BR AND BC')
+    #sk_bob_bb = abe_graph.key_generation('BR AND BC')
     
-    #sk_bob_cc = abe_graph.gen_secret_key(['CR'])
+    #sk_bob_cc = abe_graph.key_generation(['CR'])
     
     #print sk_bob_00
     
-    #print total_size(abe_graph.gen_secret_key(abe_graph._attributes))
+    #print total_size(abe_graph.key_generation(abe_graph._attributes))
     #print total_size(sk_bob_00)
     #print total_size(sk_bob_aa)
     #print total_size(sk_bob_bb)
@@ -191,10 +194,10 @@ if __name__ == '__main__':
     
     '''User/Untrusted Server side'''
     
-    query = ['v1','v2']
+    subgraph = ['v1','v2']
     result1 = KPABESymbolDiGraph.decrypt(sk_bob_aa, 
-                                        abe_graph._enc_symbol_matix, 
-                                        query)
+                                        encMat, 
+                                        subgraph)
     t4 = time.clock()
     #print '%s: %s'%(query , result1)
     print result1

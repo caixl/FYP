@@ -9,7 +9,6 @@ from SymbolDiGraph import SymbolDiGraphLst
 from SymbolLinkedlists import SymbolLinkedlists
 from AdjListDiGraph import AdjListDiGraph
 import time
-import sys
 
 
 class PairEncSymbolDiGraph:
@@ -44,7 +43,6 @@ class PairEncSymbolDiGraph:
         # initialize pre-processing for generators
         g.initPP();
         gp.initPP()
-        print sys.getsizeof(g)
         
         mk_num = self._symbol_graph.get_V()
         #self._mk_s = [None]*mk_num
@@ -97,9 +95,9 @@ class PairEncSymbolDiGraph:
                                                            *self._mk['t'][self._symbol_graph.get_keys()[w]])
                                            ,v)
        
-        print self._enc_adjlist
+        #print self._enc_adjlist
         self.padding(self._enc_adjlist)    
-        print self._enc_adjlist
+        #print self._enc_adjlist
         
         return self._enc_adjlist
     
@@ -134,7 +132,7 @@ class PairEncSymbolDiGraph:
         '''
         return ''
     
-    def gen_secret_key(self, attr_list):
+    def key_generation(self, attr_list):
         '''
         Generate individual's secret key using the given sub-graph node list
         '''
@@ -166,10 +164,10 @@ if __name__ == '__main__':
     '''Owner side'''
     
     nodes = []
-    for i in xrange(0,10):
+    for i in xrange(0,4):
         nodes.append('v%d'%(i+1))
         
-    sg = SymbolDiGraphLst(nodes,rand_E=100)
+    sg = SymbolDiGraphLst(nodes,rand_E=10)
     print sg
     
     #encrypt graph
@@ -180,7 +178,7 @@ if __name__ == '__main__':
     cipher_adjlist = list_graph.encrypt()
     t2 = time.clock()
     
-    sk = list_graph.gen_secret_key(['v1','v2'])
+    sk = list_graph.key_generation(['v1','v2'])
     t3 = time.clock()
     print sk
     

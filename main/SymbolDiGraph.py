@@ -88,12 +88,7 @@ class SymbolDiGraph(object):
  
 class SymbolDiGraphMat(SymbolDiGraph):
     
-    def __init__(self, symbols=None, G=None, rand_E=None,vertices=None):
-        if vertices!=None:
-            symbols = {}
-            for i in range(0,len(vertices)):
-                symbols[vertices[i]] = i
-        
+    def __init__(self, symbols, G=None, rand_E=None):      
         if G==None:
             G = AdjMatrixDiGraph(len(symbols))
             if rand_E==None:

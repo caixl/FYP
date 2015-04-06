@@ -38,9 +38,10 @@ class AdjMatrixDiGraph(object):
             raise RuntimeError("Number of vertices must be nonnegative")
         self._V = V
         self._E = 0
-        for _ in range (0, V):
-            self._adj_m.append([0] * V)
-            
+        for i in range (0, V):
+            self._adj_m.append([])
+            for j in range(0, V):
+                self._adj_m[i].append(0)
         
         
     def gen_random(self, E):
@@ -68,9 +69,9 @@ class AdjMatrixDiGraph(object):
         '''
         add directed edge v->w
         '''
-        if not self._adj_m[v][w]: 
-            self._E += 1
+        #if not self._adj_m[v][w]: 
         self._adj_m[v][w] = 1
+        self._E += 1
         
      
     class AdjIterator():
