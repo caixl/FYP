@@ -20,10 +20,21 @@ class SymbolLinkedlists():
     _longest = 0
     
 
-    def __init__(self, symbols):
+    def __init__(self, symbols=None, vertices=None):
         '''
         Constructor
         '''
+        self._encList = []
+        self._st = {}
+        self._keys = {}
+        self._longest = 0
+        
+        if symbols==None and vertices!=None:
+            symbols = {}
+            for i in range(0,len(vertices)):
+                symbols[vertices[i]] = i
+            
+            
         N = len(symbols)
         self._encList = [None]*N
         for i in range(N):
@@ -33,6 +44,7 @@ class SymbolLinkedlists():
             
         for label in self._st.keys():
             self._keys[self._st[label]] = label
+            
     
     def add_item(self, value, index):
         if index >= 0 and index<=len(self._st):

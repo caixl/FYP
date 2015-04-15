@@ -22,6 +22,8 @@ class SymbolDiGraph(object):
         Randomly generate a graph if digraph G is not set
         '''
         self._G = G
+        self._st = {}
+        self._keys = {}
         
         V = len(symbols)
         if V != G.get_V():

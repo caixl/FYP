@@ -1,5 +1,5 @@
 '''
-Modified on 26 Feb 2015
+Modified on 15 Apr 2015
 
 @author: Xinlei Cai
 '''
@@ -18,7 +18,7 @@ class PairEncSymbolDiGraph:
     # operating group
     _group = None
     
-    _pk = 0
+    _pk = {}
     _mk = {}
     
     
@@ -29,6 +29,9 @@ class PairEncSymbolDiGraph:
         '''
         Constructor
         '''
+        self._pk = {}
+        self._mk = {}
+    
         self._group = PairingGroup('SS512')
         self._symbol_graph = symbol_graph
 
@@ -117,20 +120,6 @@ class PairEncSymbolDiGraph:
                         res_graph.add_edge(attr,key)
         
         return res_graph
-        '''
-        group = PairingGroup('SS512')
-        kpabe = KPabe(group)
-        hyb_abe = HybridKPABEnc(kpabe, group)
-        
-        #convert to lower case
-        msg = ""
-        for query in queries:
-            s1 = query[0].lower()
-            s2 = query[1].lower()
-            cipher = cipher_matrix.get_cell_by_symbol(s1, s2)
-            msg +=  hyb_abe.decrypt(cipher, sk) + " "
-        '''
-        return ''
     
     def key_generation(self, attr_list):
         '''
@@ -147,17 +136,17 @@ class PairEncSymbolDiGraph:
             
         return sk 
                 
-    """
-    def print_result(self):
-        print self._enc_symbol_matix
-    
-    def out_to_file(self, filename):
-        pass
-    
-    def read_from_file(self, filename):
+                
+                
+                
+    @classmethod
+    def subgraph(self, enc_adjlist, vertices):
+        subenc_adjlist = SymbolLinkedlists(vertices=vertices)
+        for i in range(0, len(vertices)):
+            for item in enc_adjlist.get_list(vertices[i]):
+                subenc_adjlist.add_item(item, i)
+        return subenc_adjlist
         
-        pass
-    """
   
 if __name__ == '__main__':
     pass
@@ -178,11 +167,16 @@ if __name__ == '__main__':
     cipher_adjlist = list_graph.encrypt()
     t2 = time.clock()
     
-    sk = list_graph.key_generation(['v1','v2'])
+    sk = list_graph.key_generation(['v2','v3'])
     t3 = time.clock()
     print sk
     
-    res = PairEncSymbolDiGraph.decrypt(sk, cipher_adjlist, ['v1','v2'])
+    
+    subgraphVertices = ['v2','v3']
+    subgraph = PairEncSymbolDiGraph.subgraph(cipher_adjlist,subgraphVertices)
+
+    
+    res = PairEncSymbolDiGraph.decrypt(sk, subgraph,subgraphVertices)
     t4 = time.clock()
     print res
     print '\nAdjlist Pairing Time Spent\n-----\nSetup:%fs\nEncryption:%fs\nKeyGen:%fs\nDecryption:%fs\n-----\nTotal:%fs'%(t1-t0, t2-t1, t3-t2, t4-t3, t4-t0)

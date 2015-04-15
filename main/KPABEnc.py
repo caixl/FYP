@@ -1,6 +1,5 @@
 '''
-Created on 15 Oct, 2014
-Modified on 2 Feb 2015
+Modified on 15 Apr 2015
 
 @author: Xinlei Cai
 '''
@@ -143,6 +142,18 @@ class KPABESymbolDiGraph:
                                   self._master_key,
                                   policy)
         
+    @classmethod
+    def subgraph(self, cipher_matrix,vertices):
+        size = len(vertices)
+        enc_symbol_matix = SymbolMatrix(size, vertices=vertices)
+        for i in range(0, size):
+            for j in range(0, size):
+                cipher = cipher_matrix.get_cell_by_symbol(vertices[i],vertices[j])
+                enc_symbol_matix.set_matrix(cipher, i, j)
+        
+        return enc_symbol_matix
+        
+        
     #def print_result(self):
     #    print self._enc_symbol_matix
     
@@ -172,34 +183,25 @@ if __name__ == '__main__':
     encMat = abe_graph.encrypt()
     t2 = time.clock()
     print encMat
-    #sk_bob_00 = abe_graph.key_generation(['AR','AC','CC'])
-    #bob needs to query graph
-    #grant bob access to (a,a)
-    sk_bob_aa = abe_graph.key_generation('(v1R OR v2R) AND (v1C OR v2C)')
+    
+    sk_bob_aa = abe_graph.key_generation('(v2R OR v3R) AND (v2C OR v3C)')
     print "key:"
     print sk_bob_aa
     t3 = time.clock()
-    #grant bob access to (b,b)
-    #sk_bob_bb = abe_graph.key_generation('BR AND BC')
-    
-    #sk_bob_cc = abe_graph.key_generation(['CR'])
-    
-    #print sk_bob_00
-    
-    #print total_size(abe_graph.key_generation(abe_graph._attributes))
-    #print total_size(sk_bob_00)
-    #print total_size(sk_bob_aa)
-    #print total_size(sk_bob_bb)
-    #print total_size(sk_bob_cc)
     
     '''User/Untrusted Server side'''
     
-    subgraph = ['v1','v2']
+    subgraphVertices = ['v2','v3']
+
+    subencMat = KPABESymbolDiGraph.subgraph(encMat,subgraphVertices)
+    
+    
     result1 = KPABESymbolDiGraph.decrypt(sk_bob_aa, 
-                                        encMat, 
-                                        subgraph)
+                                        subencMat, 
+                                        subgraphVertices)
     t4 = time.clock()
-    #print '%s: %s'%(query , result1)
+
+
     print result1
     print '\nKP-ABE Time Spent\n-----\nSetup:%fs\nEncryption:%fs\nKeyGen:%fs\nDecryption:%fs\n-----\nTotal:%fs'%(t1-t0, t2-t1, t3-t2, t4-t3, t4-t0)
     

@@ -16,10 +16,21 @@ class SymbolMatrix():
     _keys = {}
     
 
-    def __init__(self, N, symbols):
+    def __init__(self, N, symbols=None, vertices=None):
         '''
         Constructor
         '''
+     
+        self._encMatix = []
+        self._st = {}
+        self._keys = {}
+        
+        if symbols==None and vertices!=None:
+            symbols = {}
+            for i in range(0,len(vertices)):
+                symbols[vertices[i]] = i
+                
+                
         self._encMatix = [None]*N
         for i in range(0, N):
             self._encMatix[i] = [None]*N
