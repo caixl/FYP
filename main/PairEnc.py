@@ -166,6 +166,7 @@ if __name__ == '__main__':
     t1 = time.clock()
     cipher_adjlist = list_graph.encrypt()
     t2 = time.clock()
+    print cipher_adjlist
     
     sk = list_graph.key_generation(['v2','v3'])
     t3 = time.clock()

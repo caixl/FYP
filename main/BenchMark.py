@@ -42,11 +42,11 @@ def testCPABE_mk(nodes, E):
     abe_graph = CPABESymbolDiGraph(sg)
     pk_t, mk_t = abe_graph.setup()
     return len(str(mk_t))
+    #return sys.getsizeof(mk_t)
     
     
 def testKPABE_mk(nodes, E):
     sg = SymbolDiGraphMat(nodes, rand_E=E)
-    print len(nodes)
     abe_graph = KPABESymbolDiGraph(sg)
     pk_t, mk_t = abe_graph.setup()
     return len(str(mk_t))
@@ -68,7 +68,6 @@ def testCPABE_pp(nodes, E):
     
 def testKPABE_pp(nodes, E):
     sg = SymbolDiGraphMat(nodes, rand_E=E)
-    print len(nodes)
     abe_graph = KPABESymbolDiGraph(sg)
     pk_t, mk_t = abe_graph.setup()
     return len(str(pk_t))
@@ -317,8 +316,67 @@ def compare_dec_rt(N, E, K):
     print "KPABE with %d vertices and %d edges and %d queried subnodes %s s"%(N, E, Q, testKPABE_dec(kpabe_dk, kpabeEncMat, subnodes))
     print "PAIRE with %d vertices and %d edges and %d queried subnodes %s s"%(N, E, Q, testPairEnc_dec( plist_dk, pairEncList, subnodes ))
     print ""
+ 
+ 
+def testCPABE_subgraph_size(nodes, E, vertices):
+    sg = SymbolDiGraphMat(nodes, rand_E=E)
+    abe_graph = CPABESymbolDiGraph(sg)
+    abe_graph.setup()
+    encMat = abe_graph.encrypt()
     
+    return len(str(abe_graph.subgraph(encMat, vertices)))
+
+
+def testKPABE_subgraph_size(nodes, E, vertices):
+    sg = SymbolDiGraphMat(nodes, rand_E=E)
+    abe_graph = KPABESymbolDiGraph(sg)
+    abe_graph.setup()
+    encMat = abe_graph.encrypt()
+    return len(str(abe_graph.subgraph(encMat, vertices)))
+
+
+def testPairEnc_subgraph_size(nodes,E, vertices):
+    sg = SymbolDiGraphLst(nodes,rand_E=E)
+    list_graph = PairEncSymbolDiGraph(sg)
+    list_graph.setup()
+    enc_adjlist = list_graph.encrypt()
+    return len(str(list_graph.subgraph(enc_adjlist, vertices)))
+ 
+ 
     
+def testCPABE_subgraph(nodes, E, vertices):
+    sg = SymbolDiGraphMat(nodes, rand_E=E)
+    abe_graph = CPABESymbolDiGraph(sg)
+    abe_graph.setup()
+    encMat = abe_graph.encrypt()
+    t0 = time.clock()
+    abe_graph.subgraph(encMat, vertices)
+    t1 = time.clock()
+    return t1-t0
+
+
+def testKPABE_subgraph(nodes, E, vertices):
+    sg = SymbolDiGraphMat(nodes, rand_E=E)
+    abe_graph = KPABESymbolDiGraph(sg)
+    abe_graph.setup()
+    encMat = abe_graph.encrypt()
+    t0 = time.clock()
+    abe_graph.subgraph(encMat, vertices)
+    t1 = time.clock()
+    return t1-t0
+
+
+def testPairEnc_subgraph(nodes,E, vertices):
+    sg = SymbolDiGraphLst(nodes,rand_E=E)
+    list_graph = PairEncSymbolDiGraph(sg)
+    list_graph.setup()
+    enc_adjlist = list_graph.encrypt()
+    t0 = time.clock()
+    list_graph.subgraph(enc_adjlist, vertices)
+    t1 = time.clock()
+    return t1-t0
+
+
 
 def testCPABE_enc(nodes, E):
     sg = SymbolDiGraphMat(nodes, rand_E=E)
@@ -422,6 +480,55 @@ def compare_enc_rt(N, E):
     print "PAIRE with %d vertices and %d edges: %s s"%(N, E, testPairEnc_enc(nodes,E))
     print ""
 
+
+def compare_subgraph_ct(N, E, Q):
+    nodes = []
+    for i in xrange(0,N):
+        nodes.append('v%d'%(i+1))  
+    
+    vertices = []
+    for i in xrange(0,Q):
+        vertices.append('v%d'%(i+1))  
+        
+    
+    print "CPABE with %d subvertices and %d edges: %s  "%(Q, E, testCPABE_subgraph_size(nodes,E, vertices))
+    print "KPABE with %d subvertices and %d edges: %s  "%(Q, E, testKPABE_subgraph_size(nodes,E, vertices))
+    print "PAIRE with %d subvertices and %d edges: %s  "%(Q, E, testPairEnc_subgraph_size(nodes,E, vertices))
+    print ""
+
+
+
+def compare_subgraph_rt(N, E, Q):
+    nodes = []
+    for i in xrange(0,N):
+        nodes.append('v%d'%(i+1))  
+    vertices = []
+    for i in xrange(0,Q):
+        vertices.append('v%d'%(i+1))  
+        
+    
+    print "CPABE with %d subvertices and %d edges: %s s "%(Q, E, testCPABE_subgraph(nodes,E, vertices))
+    print "KPABE with %d subvertices and %d edges: %s s "%(Q, E, testKPABE_subgraph(nodes,E, vertices))
+    print "PAIRE with %d subvertices and %d edges: %s s "%(Q, E, testPairEnc_subgraph(nodes,E, vertices))
+    print ""
+
+
+def run_test_subgraph_ct():
+    #sparse
+    compare_subgraph_ct(20,20,4)
+    compare_subgraph_ct(20,20,8)
+    compare_subgraph_ct(20,20,12)
+    compare_subgraph_ct(20,20,16)
+    
+    
+    #dense
+    compare_subgraph_ct(20,400,4)
+    compare_subgraph_ct(20,400,8)
+    compare_subgraph_ct(20,400,12)
+    compare_subgraph_ct(20,400,16)
+    
+    
+
 def run_test_enc_rt():
     
     #for i in range(0, len(V10E)):
@@ -447,6 +554,26 @@ def run_test_keygen():
     compare_keygen(100,100*100,60)
     compare_keygen(100,100*100,80)
     compare_keygen(100,100*100,100)
+
+def run_test_pp():
+    N = 10
+    E = N
+    nodes = []
+    for i in xrange(0,N):
+        nodes.append('v%d'%(i+1))
+    print testCPABE_pp(nodes, E)
+    print testKPABE_pp(nodes, E)
+    print testPairEnc_pp(nodes, E)
+   
+def run_test_mk():
+    N = 10
+    E = N
+    nodes = []
+    for i in xrange(0,N):
+        nodes.append('v%d'%(i+1))
+    print testCPABE_mk(nodes, E)
+    print testKPABE_mk(nodes, E)
+    print testPairEnc_mk(nodes, E) 
     
 if __name__ == '__main__':
     
@@ -463,6 +590,8 @@ if __name__ == '__main__':
     #decryption key  
     #run_test_dk()
     
+    #subgraph
+    #run_test_subgraph_ct()
     
     """Runningtime"""
     
